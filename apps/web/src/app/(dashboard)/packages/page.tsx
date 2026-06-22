@@ -134,14 +134,28 @@ export default function PackagesPage() {
         </div>
       </div>
 
-      {/* Proxy banner */}
-      <div className="bg-[#EFF6FF] border border-[#BFDBFE] rounded-lg p-4 flex items-center gap-3">
-        <Package className="w-5 h-5 text-[#3B82F6]" />
-        <div className="flex-1">
-          <p className="text-sm font-medium text-[#1F2937]">代理源已启用</p>
-          <p className="text-xs text-[#6B7280] font-mono">https://npm.configops.dev/proxy</p>
+      {/* Registry setup banner */}
+      <div className="bg-[#EFF6FF] border border-[#BFDBFE] rounded-lg p-4">
+        <div className="flex items-center gap-3 mb-3">
+          <Package className="w-5 h-5 text-[#3B82F6]" />
+          <div className="flex-1">
+            <p className="text-sm font-medium text-[#1F2937]">npm Registry 已启用</p>
+            <p className="text-xs text-[#6B7280] font-mono">{typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3002'}/api/npm</p>
+          </div>
+          <Badge variant="info">运行中</Badge>
         </div>
-        <Badge variant="info">运行中</Badge>
+        <div className="mt-3 pt-3 border-t border-[#BFDBFE] space-y-1.5">
+          <p className="text-xs font-medium text-[#1F2937]">快速接入：</p>
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-md bg-white border border-[#E5E7EB] font-mono text-xs text-[#6B7280]">
+            <span className="text-[#9CA3AF]">$</span>
+            <span className="flex-1">npm config set registry {typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3002'}/api/npm</span>
+          </div>
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-md bg-white border border-[#E5E7EB] font-mono text-xs text-[#6B7280]">
+            <span className="text-[#9CA3AF]">$</span>
+            <span className="flex-1">npm login --registry={typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3002'}/api/npm</span>
+            <span className="text-[#9CA3AF] text-[10px]">用 API Key 作为密码</span>
+          </div>
+        </div>
       </div>
 
       {/* Search */}
