@@ -33,7 +33,7 @@ const envOptions = [
   { value: 'DEV', label: 'DEV', color: 'gray' as const },
   { value: 'TEST', label: 'TEST', color: 'info' as const },
   { value: 'PROD', label: 'PROD', color: 'warning' as const },
-];
+] as const;
 
 export function ConfigEditor({ open, onClose, onSaved, config, defaultEnv = 'DEV' }: ConfigEditorProps) {
   const isEdit = !!config;

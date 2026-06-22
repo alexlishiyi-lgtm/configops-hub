@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { db } from '@/lib/db';
 import { auth } from '@/lib/auth';
 import { getWorkspace } from '@/lib/workspace';
+import { triggerWebhooks } from '@/lib/webhook';
 
 const updateConfigSchema = z.object({
   value: z.string().min(0).optional(),
@@ -149,6 +150,13 @@ export async function PUT(
       return updated;
     });
 
+    // Trigger webhooks (fire-and-forget)
+    triggerWebhooks({
+      workspaceId: ctx.workspace.id,
+      event: 'config.updated',
+      data: { key: config.key, environment: config.environment, oldValue: config.value, newValue, version: nextVersion },
+    }).catch(() => {});
+
     return NextResponse.json({ config: updated });
   }
 
@@ -219,6 +227,13 @@ export async function DELETE(
       where: { id: config.id },
     });
   });
+
+  // Trigger webhooks (fire-and-forget)
+  triggerWebhooks({
+    workspaceId: ctx.workspace.id,
+    event: 'config.deleted',
+    data: { key: config.key, environment: config.environment },
+  }).catch(() => {});
 
   return NextResponse.json({ success: true });
 }

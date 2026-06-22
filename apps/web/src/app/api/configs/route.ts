@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { db } from '@/lib/db';
 import { auth } from '@/lib/auth';
 import { getWorkspace } from '@/lib/workspace';
+import { triggerWebhooks } from '@/lib/webhook';
 
 const createConfigSchema = z.object({
   key: z.string().min(1).max(255).regex(/^[a-zA-Z0-9_.\-/]+$/, 'Key 只能包含字母、数字、点、下划线、短横线'),
@@ -145,6 +146,13 @@ export async function POST(request: NextRequest) {
 
     return config;
   });
+
+  // Trigger webhooks (fire-and-forget)
+  triggerWebhooks({
+    workspaceId: ctx.workspace.id,
+    event: 'config.created',
+    data: { key, environment, type, value, configId: config.id },
+  }).catch(() => {});
 
   return NextResponse.json({ config }, { status: 201 });
 }

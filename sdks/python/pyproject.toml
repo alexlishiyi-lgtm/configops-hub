@@ -1,0 +1,16 @@
+[project]
+name = "configops-sdk"
+version = "0.1.0"
+description = "ConfigOps Hub SDK — fetch configs with ETag caching"
+license = "MIT"
+requires-python = ">=3.9"
+dependencies = [
+    "requests>=2.28.0",
+]
+
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.backends._legacy:_Backend"
+
+[tool.setuptools.packages.find]
+include = ["configops*"]

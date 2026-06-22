@@ -8,6 +8,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Users, Key, CreditCard, Webhook, Plus, Trash2, Loader2, Shield, Crown } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { ApiKeysTab } from '@/components/settings/ApiKeysTab';
+import { WebhooksTab } from '@/components/settings/WebhooksTab';
 
 type Tab = 'members' | 'apikeys' | 'billing' | 'webhooks';
 
@@ -243,16 +245,8 @@ export default function SettingsPage() {
         </div>
       )}
 
-      {/* API Keys Tab (placeholder for Sprint 3) */}
-      {tab === 'apikeys' && (
-        <Card>
-          <CardContent className="p-12 text-center">
-            <Key className="w-10 h-10 text-[#D1D5DB] mx-auto mb-3" />
-            <p className="text-sm text-[#6B7280]">API 密钥管理将在 Sprint 3 上线</p>
-            <p className="text-xs text-[#9CA3AF] mt-1">届时可生成密钥用于 SDK 接入</p>
-          </CardContent>
-        </Card>
-      )}
+      {/* API Keys Tab */}
+      {tab === 'apikeys' && <ApiKeysTab />}
 
       {/* Billing Tab (placeholder for Sprint 6) */}
       {tab === 'billing' && (
@@ -265,16 +259,8 @@ export default function SettingsPage() {
         </Card>
       )}
 
-      {/* Webhooks Tab (placeholder for Sprint 3) */}
-      {tab === 'webhooks' && (
-        <Card>
-          <CardContent className="p-12 text-center">
-            <Webhook className="w-10 h-10 text-[#D1D5DB] mx-auto mb-3" />
-            <p className="text-sm text-[#6B7280]">Webhook 配置将在 Sprint 3 上线</p>
-            <p className="text-xs text-[#9CA3AF] mt-1">届时可订阅配置变更事件并回调通知</p>
-          </CardContent>
-        </Card>
-      )}
+      {/* Webhooks Tab */}
+      {tab === 'webhooks' && <WebhooksTab />}
     </div>
   );
 }

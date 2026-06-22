@@ -1,0 +1,14 @@
+{
+  "name": "@configops/sdk",
+  "version": "0.1.0",
+  "description": "ConfigOps Hub SDK — fetch configs with ETag caching",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "scripts": {
+    "build": "tsc",
+    "test": "node test/index.test.js"
+  },
+  "keywords": ["configops", "config", "configuration", "sdk"],
+  "license": "MIT",
+  "dependencies": {}
+}

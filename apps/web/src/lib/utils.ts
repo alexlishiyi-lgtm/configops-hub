@@ -28,10 +28,3 @@ export function timeAgo(date: Date | string): string {
   if (days < 30) return `${days} 天前`;
   return formatDate(d);
 }
-
-export function generateApiKey(): { key: string; prefix: string } {
-  const random = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
-  const key = `cop_${random}${Date.now().toString(36)}`;
-  const prefix = key.substring(0, 12) + '...';
-  return { key, prefix };
-}
