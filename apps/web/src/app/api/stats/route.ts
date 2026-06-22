@@ -20,7 +20,7 @@ export async function GET() {
 
   const workspaceId = ctx.workspace.id;
 
-  const [configCount, todayChanges, packageCount, memberCount, recentLogs] = await Promise.all([
+  const [configCount, todayChanges, packageCount, memberCount, recentLogs, envCounts] = await Promise.all([
     db.config.count({ where: { workspaceId } }),
     db.auditLog.count({
       where: {
@@ -40,7 +40,17 @@ export async function GET() {
         // We don't have a direct relation to User in AuditLog, but we store userId
       },
     }),
+    db.config.groupBy({
+      by: ['environment'],
+      where: { workspaceId },
+      _count: true,
+    }),
   ]);
+
+  const envStats: Record<string, number> = { DEV: 0, TEST: 0, PROD: 0 };
+  for (const item of envCounts) {
+    envStats[item.environment] = item._count;
+  }
 
   // Get user names for recent logs
   const userIds = recentLogs.map((l) => l.userId).filter(Boolean) as string[];
@@ -70,6 +80,7 @@ export async function GET() {
       todayChanges,
       packageCount,
       memberCount,
+      envStats,
     },
     recentChanges,
   });

@@ -22,6 +22,7 @@ interface StatsData {
     todayChanges: number;
     packageCount: number;
     memberCount: number;
+    envStats?: Record<string, number>;
   };
   recentChanges: Array<{
     id: string;
@@ -33,6 +34,12 @@ interface StatsData {
     createdAt: string;
   }>;
 }
+
+const envBadgeColors: Record<string, 'gray' | 'info' | 'warning'> = {
+  DEV: 'gray',
+  TEST: 'info',
+  PROD: 'warning',
+};
 
 const actionLabels: Record<string, { label: string; variant: 'success' | 'warning' | 'info' | 'danger' | 'gray' | 'default' }> = {
   CREATE: { label: '新增', variant: 'success' },
@@ -89,6 +96,14 @@ export default function DashboardPage() {
     { label: '团队成员', value: data.stats.memberCount, icon: Users, color: 'text-[#3B82F6]', bg: 'bg-[#EFF6FF]' },
   ];
 
+  const envStats = data.stats.envStats || { DEV: 0, TEST: 0, PROD: 0 };
+  const envEntries = [
+    { key: 'DEV', label: '开发环境', count: envStats.DEV || 0, color: '#6B7280', bg: 'bg-[#F3F4F6]' },
+    { key: 'TEST', label: '测试环境', count: envStats.TEST || 0, color: '#2563EB', bg: 'bg-[#EFF6FF]' },
+    { key: 'PROD', label: '生产环境', count: envStats.PROD || 0, color: '#D97706', bg: 'bg-[#FFFBEB]' },
+  ];
+  const totalConfigs = envEntries.reduce((sum, e) => sum + e.count, 0);
+
   return (
     <div className="space-y-6">
       {/* Welcome */}
@@ -113,6 +128,61 @@ export default function DashboardPage() {
           </Card>
         ))}
       </div>
+
+      {/* Environment Distribution */}
+      <Card>
+        <CardContent className="p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="font-semibold text-[#1F2937]">环境配置分布</h2>
+            <Link href="/configs">
+              <Button variant="ghost" size="sm">
+                管理配置 <ArrowRight className="w-3 h-3" />
+              </Button>
+            </Link>
+          </div>
+          {totalConfigs === 0 ? (
+            <p className="text-sm text-[#9CA3AF] text-center py-6">暂无配置项，去创建第一个吧</p>
+          ) : (
+            <>
+              {/* Stacked bar */}
+              <div className="flex h-3 rounded-full overflow-hidden mb-4">
+                {envEntries.map((env) => (
+                  env.count > 0 && (
+                    <div
+                      key={env.key}
+                      className="h-full transition-all"
+                      style={{
+                        width: `${(env.count / totalConfigs) * 100}%`,
+                        backgroundColor: env.color,
+                      }}
+                      title={`${env.label}: ${env.count}`}
+                    />
+                  )
+                ))}
+              </div>
+              {/* Legend with counts */}
+              <div className="grid grid-cols-3 gap-4">
+                {envEntries.map((env) => (
+                  <Link
+                    key={env.key}
+                    href={`/configs`}
+                    className="flex items-center gap-2 p-3 rounded-lg border border-[#E5E7EB] hover:border-[#4F46E5] hover:bg-[#F8F9FB] transition-colors"
+                  >
+                    <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: env.color }} />
+                    <div className="flex-1">
+                      <p className="text-xs text-[#6B7280]">{env.label}</p>
+                      <p className="text-lg font-bold text-[#1F2937]">{env.count}</p>
+                    </div>
+                    <span className="text-xs text-[#9CA3AF]">
+                      {totalConfigs > 0 ? Math.round((env.count / totalConfigs) * 100) : 0}%
+                    </span>
+                  </Link>
+                ))}
+              </div>
+            </>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Two columns */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -145,7 +215,7 @@ export default function DashboardPage() {
                       <span className="font-medium text-sm text-[#1F2937] flex-1 truncate">
                         {change.key}
                       </span>
-                      {change.environment && <Badge variant="gray">{change.environment}</Badge>}
+                      {change.environment && <Badge variant={envBadgeColors[change.environment] || 'gray'}>{change.environment}</Badge>}
                       <span className="text-xs text-[#9CA3AF] w-24 text-right truncate">{change.user}</span>
                       <span className="text-xs text-[#9CA3AF] w-20 text-right whitespace-nowrap">
                         {timeAgo(change.createdAt)}

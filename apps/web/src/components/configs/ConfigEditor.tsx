@@ -146,23 +146,31 @@ export function ConfigEditor({ open, onClose, onSaved, config, defaultEnv = 'DEV
           {/* Environment */}
           {!isEdit && (
             <div className="space-y-1.5">
-              <Label>环境</Label>
+              <Label>环境 <span className="text-[#EF4444]">*</span></Label>
               <div className="flex gap-2">
                 {envOptions.map((opt) => (
                   <button
                     key={opt.value}
                     type="button"
                     onClick={() => setEnvironment(opt.value)}
-                    className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                    className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                       environment === opt.value
                         ? 'bg-[#4F46E5] text-white'
                         : 'bg-[#F3F4F6] text-[#6B7280] hover:bg-[#E5E7EB]'
                     }`}
                   >
+                    <span className={`w-1.5 h-1.5 rounded-full ${
+                      environment === opt.value ? 'bg-white/80' :
+                      opt.value === 'DEV' ? 'bg-[#6B7280]' :
+                      opt.value === 'TEST' ? 'bg-[#2563EB]' : 'bg-[#D97706]'
+                    }`} />
                     {opt.label}
                   </button>
                 ))}
               </div>
+              <p className="text-xs text-[#9CA3AF]">
+                当前将在 <span className="font-semibold text-[#4F46E5]">{environment}</span> 环境下创建此配置项
+              </p>
             </div>
           )}
 

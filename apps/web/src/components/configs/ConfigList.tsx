@@ -28,16 +28,22 @@ const typeColors: Record<string, 'default' | 'success' | 'warning' | 'info' | 'g
   JSON: 'warning',
 };
 
+const envColors: Record<string, 'gray' | 'info' | 'warning'> = {
+  DEV: 'gray',
+  TEST: 'info',
+  PROD: 'warning',
+};
+
 const envTabs = [
-  { value: 'DEV', label: 'DEV' },
-  { value: 'TEST', label: 'TEST' },
-  { value: 'PROD', label: 'PROD' },
+  { value: 'DEV', label: 'DEV', color: 'bg-[#6B7280]' },
+  { value: 'TEST', label: 'TEST', color: 'bg-[#2563EB]' },
+  { value: 'PROD', label: 'PROD', color: 'bg-[#D97706]' },
 ] as const;
 
 export function ConfigList() {
   const [configs, setConfigs] = useState<Config[]>([]);
   const [loading, setLoading] = useState(true);
-  const [env, setEnv] = useState<'DEV' | 'TEST' | 'PROD' | 'ALL'>('DEV');
+  const [env, setEnv] = useState<'DEV' | 'TEST' | 'PROD' | 'ALL'>('ALL');
   const [search, setSearch] = useState('');
   const [searchInput, setSearchInput] = useState('');
   const [editorOpen, setEditorOpen] = useState(false);
@@ -127,10 +133,11 @@ export function ConfigList() {
             key={tab.value}
             onClick={() => setEnv(tab.value)}
             className={cn(
-              'px-4 py-1.5 rounded-md text-xs font-medium transition-colors',
+              'flex items-center gap-1.5 px-4 py-1.5 rounded-md text-xs font-medium transition-colors',
               env === tab.value ? 'bg-[#4F46E5] text-white' : 'bg-[#F3F4F6] text-[#6B7280] hover:bg-[#E5E7EB]'
             )}
           >
+            <span className={cn('w-1.5 h-1.5 rounded-full', env === tab.value ? 'bg-white/80' : tab.color)} />
             {tab.label}
           </button>
         ))}
@@ -202,7 +209,7 @@ export function ConfigList() {
                         <Badge variant={typeColors[config.type]}>{config.type}</Badge>
                       </td>
                       <td className="py-3 px-2">
-                        <Badge variant="gray">{config.environment}</Badge>
+                        <Badge variant={envColors[config.environment] || 'gray'}>{config.environment}</Badge>
                       </td>
                       <td className="py-3 px-2 text-sm text-[#6B7280] max-w-[150px] truncate">
                         {config.description || '-'}
