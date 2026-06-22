@@ -4,6 +4,7 @@ import { db } from '@/lib/db';
 import { auth } from '@/lib/auth';
 import { getWorkspace } from '@/lib/workspace';
 import { triggerWebhooks } from '@/lib/webhook';
+import { isFeatureAvailable, PLAN_LIMITS } from '@/lib/plan-limits';
 import type { Prisma } from '@prisma/client';
 
 const rollbackSchema = z.object({
@@ -38,6 +39,13 @@ export async function POST(
   // Only ADMIN and DEVELOPER can rollback
   if (ctx.role === 'VIEWER') {
     return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 });
+  }
+
+  // Check plan: rollback requires PRO or TEAM
+  if (!isFeatureAvailable(ctx.workspace.plan, 'rollback')) {
+    return NextResponse.json({
+      error: `${PLAN_LIMITS[ctx.workspace.plan].label} 不支持版本回滚功能，请升级到专业版或团队版`,
+    }, { status: 402 });
   }
 
   const { id } = await params;

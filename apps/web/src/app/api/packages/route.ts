@@ -4,6 +4,7 @@ import { db } from '@/lib/db';
 import { auth } from '@/lib/auth';
 import { getWorkspace } from '@/lib/workspace';
 import { triggerWebhooks } from '@/lib/webhook';
+import { checkPackageLimit, PLAN_LIMITS } from '@/lib/plan-limits';
 import type { PackageScope } from '@prisma/client';
 import type { Prisma } from '@prisma/client';
 
@@ -86,7 +87,7 @@ export async function POST(request: NextRequest) {
 
   const { name, scope, version, description, isPrivate, size, tarballUrl } = parsed.data;
 
-  // Check for duplicate (workspaceId + scope + name)
+  // Check plan limits (only for new packages, not updates)
   const existing = await db.package.findUnique({
     where: {
       workspaceId_scope_name: {
@@ -134,7 +135,14 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ package: updated });
   }
 
-  // Create new package
+  // Create new package — check plan limits first
+  const limitCheck = await checkPackageLimit(ctx.workspace.id, ctx.workspace.plan, db);
+  if (!limitCheck.allowed) {
+    return NextResponse.json({
+      error: `已达到 ${PLAN_LIMITS[ctx.workspace.plan].label} 包数量上限 (${limitCheck.max} 个)，请升级计划`,
+    }, { status: 402 });
+  }
+
   const pkg = await db.$transaction(async (tx) => {
     const pkg = await tx.package.create({
       data: {

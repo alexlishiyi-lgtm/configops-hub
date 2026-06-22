@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { db } from '@/lib/db';
 import { auth } from '@/lib/auth';
 import { getWorkspace } from '@/lib/workspace';
+import { checkMemberLimit, PLAN_LIMITS } from '@/lib/plan-limits';
 
 const inviteSchema = z.object({
   email: z.string().email(),
@@ -70,6 +71,14 @@ export async function POST(request: NextRequest) {
   }
 
   const { email, role } = parsed.data;
+
+  // Check plan limits
+  const limitCheck = await checkMemberLimit(ctx.workspace.id, ctx.workspace.plan, db);
+  if (!limitCheck.allowed) {
+    return NextResponse.json({
+      error: `已达到 ${PLAN_LIMITS[ctx.workspace.plan].label} 成员上限 (${limitCheck.max} 人)，请升级计划`,
+    }, { status: 402 });
+  }
 
   // Find user by email
   const targetUser = await db.user.findUnique({

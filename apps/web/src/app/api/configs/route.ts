@@ -4,6 +4,7 @@ import { db } from '@/lib/db';
 import { auth } from '@/lib/auth';
 import { getWorkspace } from '@/lib/workspace';
 import { triggerWebhooks } from '@/lib/webhook';
+import { checkConfigLimit, PLAN_LIMITS } from '@/lib/plan-limits';
 
 const createConfigSchema = z.object({
   key: z.string().min(1).max(255).regex(/^[a-zA-Z0-9_.\-/]+$/, 'Key 只能包含字母、数字、点、下划线、短横线'),
@@ -84,6 +85,14 @@ export async function POST(request: NextRequest) {
   }
 
   const { key, value, type, environment, description } = parsed.data;
+
+  // Check plan limits
+  const limitCheck = await checkConfigLimit(ctx.workspace.id, ctx.workspace.plan, db);
+  if (!limitCheck.allowed) {
+    return NextResponse.json({
+      error: `已达到 ${PLAN_LIMITS[ctx.workspace.plan].label} 配置项上限 (${limitCheck.max} 条)，请升级计划`,
+    }, { status: 402 });
+  }
 
   // Check for duplicate key+env
   const existing = await db.config.findUnique({

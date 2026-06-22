@@ -4,6 +4,7 @@ import { db } from '@/lib/db';
 import { auth } from '@/lib/auth';
 import { getWorkspace } from '@/lib/workspace';
 import { generateWebhookSecret } from '@/lib/crypto';
+import { isFeatureAvailable, PLAN_LIMITS } from '@/lib/plan-limits';
 
 const webhookEvents = [
   'config.created',
@@ -68,6 +69,13 @@ export async function POST(request: NextRequest) {
 
   if (ctx.role === 'VIEWER') {
     return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 });
+  }
+
+  // Check plan: webhooks require PRO or TEAM
+  if (!isFeatureAvailable(ctx.workspace.plan, 'webhooks')) {
+    return NextResponse.json({
+      error: `${PLAN_LIMITS[ctx.workspace.plan].label} 不支持 Webhook 功能，请升级到专业版或团队版`,
+    }, { status: 402 });
   }
 
   const body = await request.json();

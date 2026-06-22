@@ -10,6 +10,7 @@ import { Users, Key, CreditCard, Webhook, Plus, Trash2, Loader2, Shield, Crown }
 import { cn } from '@/lib/utils';
 import { ApiKeysTab } from '@/components/settings/ApiKeysTab';
 import { WebhooksTab } from '@/components/settings/WebhooksTab';
+import { BillingTab } from '@/components/settings/BillingTab';
 
 type Tab = 'members' | 'apikeys' | 'billing' | 'webhooks';
 
@@ -248,16 +249,8 @@ export default function SettingsPage() {
       {/* API Keys Tab */}
       {tab === 'apikeys' && <ApiKeysTab />}
 
-      {/* Billing Tab (placeholder for Sprint 6) */}
-      {tab === 'billing' && (
-        <Card>
-          <CardContent className="p-12 text-center">
-            <CreditCard className="w-10 h-10 text-[#D1D5DB] mx-auto mb-3" />
-            <p className="text-sm text-[#6B7280]">订阅计费将在 Sprint 6 上线</p>
-            <p className="text-xs text-[#9CA3AF] mt-1">当前为免费版，可使用全部基础功能</p>
-          </CardContent>
-        </Card>
-      )}
+      {/* Billing Tab */}
+      {tab === 'billing' && <BillingTab />}
 
       {/* Webhooks Tab */}
       {tab === 'webhooks' && <WebhooksTab />}
