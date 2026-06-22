@@ -244,7 +244,7 @@ export function ConfigList() {
 
       {/* Editor Modal */}
       <ConfigEditor
-        key={editConfig?.id || 'new'}
+        key={editConfig?.id || `new-${env}`}
         open={editorOpen}
         onClose={() => setEditorOpen(false)}
         onSaved={fetchConfigs}
