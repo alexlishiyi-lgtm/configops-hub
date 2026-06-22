@@ -58,6 +58,7 @@ export function ConfigEditor({ open, onClose, onSaved, config, defaultEnv = 'DEV
   const [key, setKey] = useState(config?.key ?? '');
   const [value, setValue] = useState(config?.value ?? '');
   const [type, setType] = useState<'STRING' | 'NUMBER' | 'BOOLEAN' | 'JSON'>(config?.type ?? 'STRING');
+  const [jsonError, setJsonError] = useState<string | null>(null);
   const [environment, setEnvironment] = useState<'DEV' | 'TEST' | 'PROD'>(config?.environment ?? defaultEnv);
   const [description, setDescription] = useState(config?.description ?? '');
   const [loading, setLoading] = useState(false);
@@ -100,6 +101,17 @@ export function ConfigEditor({ open, onClose, onSaved, config, defaultEnv = 'DEV
     e.preventDefault();
     setLoading(true);
     setError(null);
+
+    // JSON type validation
+    if (type === 'JSON') {
+      try {
+        JSON.parse(value);
+      } catch {
+        setError('JSON 格式错误，请检查语法后再保存');
+        setLoading(false);
+        return;
+      }
+    }
 
     try {
       const url = isEdit ? `/api/configs/${config!.id}` : '/api/configs';
@@ -169,7 +181,10 @@ export function ConfigEditor({ open, onClose, onSaved, config, defaultEnv = 'DEV
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={onClose}>
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
+      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+    >
       <div
         className="w-full max-w-lg rounded-xl bg-white shadow-xl max-h-[90vh] flex flex-col"
         onClick={(e) => e.stopPropagation()}
@@ -266,13 +281,28 @@ export function ConfigEditor({ open, onClose, onSaved, config, defaultEnv = 'DEV
             <div className="space-y-1.5">
               <Label>值 (Value)</Label>
               {type === 'JSON' ? (
-                <textarea
-                  value={value}
-                  onChange={(e) => setValue(e.target.value)}
-                  placeholder='{"key": "value"}'
-                  className="w-full min-h-[100px] rounded-lg border border-[#E5E7EB] bg-white px-3 py-2 font-mono text-sm text-[#1F2937] placeholder:text-[#9CA3AF] focus:border-[#4F46E5] focus:outline-none focus:ring-2 focus:ring-[#4F46E5]/20"
-                  required
-                />
+                <>
+                  <textarea
+                    value={value}
+                    onChange={(e) => {
+                      setValue(e.target.value);
+                      try {
+                        JSON.parse(e.target.value);
+                        setJsonError(null);
+                      } catch {
+                        setJsonError('JSON 格式错误，请检查语法');
+                      }
+                    }}
+                    placeholder='{"key": "value"}'
+                    className={`w-full min-h-[100px] rounded-lg border bg-white px-3 py-2 font-mono text-sm text-[#1F2937] placeholder:text-[#9CA3AF] focus:border-[#4F46E5] focus:outline-none focus:ring-2 focus:ring-[#4F46E5]/20 ${
+                      jsonError ? 'border-[#EF4444]' : 'border-[#E5E7EB]'
+                    }`}
+                    required
+                  />
+                  {jsonError && (
+                    <p className="text-xs text-[#EF4444] mt-1">{jsonError}</p>
+                  )}
+                </>
               ) : type === 'BOOLEAN' ? (
                 <div className="flex gap-2">
                   {['true', 'false'].map((v) => (

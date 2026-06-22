@@ -1,12 +1,13 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ConfigEditor } from './ConfigEditor';
-import { Settings2, Plus, Search, Pencil, Trash2, Loader2, RefreshCw } from 'lucide-react';
+import { Settings2, Plus, Search, Pencil, Trash2, Loader2, RefreshCw, Copy } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { timeAgo } from '@/lib/utils';
 
@@ -41,15 +42,31 @@ const envTabs = [
 ] as const;
 
 export function ConfigList() {
+  const searchParams = useSearchParams();
+  const initialEnv = (searchParams.get('env') as 'DEV' | 'TEST' | 'PROD' | 'ALL' | null) || 'ALL';
+  const initialSearch = searchParams.get('q') || '';
+
   const [configs, setConfigs] = useState<Config[]>([]);
   const [loading, setLoading] = useState(true);
-  const [env, setEnv] = useState<'DEV' | 'TEST' | 'PROD' | 'ALL'>('ALL');
-  const [search, setSearch] = useState('');
-  const [searchInput, setSearchInput] = useState('');
+  const [env, setEnv] = useState<'DEV' | 'TEST' | 'PROD' | 'ALL'>(initialEnv);
+  const [search, setSearch] = useState(initialSearch);
+  const [searchInput, setSearchInput] = useState(initialSearch);
   const [editorOpen, setEditorOpen] = useState(false);
   const [editConfig, setEditConfig] = useState<Config | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
+
+  // Sync state to URL
+  useEffect(() => {
+    const params = new URLSearchParams();
+    if (env !== 'ALL') params.set('env', env);
+    if (search) params.set('q', search);
+    const newUrl = params.toString() ? `/configs?${params.toString()}` : '/configs';
+    const currentUrl = window.location.pathname + window.location.search;
+    if (currentUrl !== newUrl) {
+      window.history.replaceState({}, '', newUrl);
+    }
+  }, [env, search]);
 
   const fetchConfigs = useCallback(async () => {
     setLoading(true);
@@ -101,6 +118,11 @@ export function ConfigList() {
     } finally {
       setDeleting(false);
     }
+  };
+
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text);
+    // Could add a toast here later
   };
 
   return (
@@ -155,10 +177,10 @@ export function ConfigList() {
             onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
           />
         </div>
-        <Button variant="outline" size="icon" onClick={handleSearch}>
+        <Button variant="outline" size="icon" type="button" onClick={handleSearch}>
           <Search className="w-4 h-4" />
         </Button>
-        <Button variant="ghost" size="icon" onClick={fetchConfigs}>
+        <Button variant="ghost" size="icon" type="button" onClick={fetchConfigs}>
           <RefreshCw className="w-4 h-4" />
         </Button>
       </div>
@@ -178,9 +200,32 @@ export function ConfigList() {
             </div>
           ) : configs.length === 0 ? (
             <div className="text-center py-12">
-              <Settings2 className="w-10 h-10 text-[#D1D5DB] mx-auto mb-3" />
-              <p className="text-sm text-[#6B7280]">暂无配置项</p>
-              <Button variant="outline" size="sm" className="mt-3" onClick={handleCreate}>
+              <div className="w-16 h-16 rounded-full bg-[#EEF2FF] flex items-center justify-center mx-auto mb-4">
+                <Settings2 className="w-8 h-8 text-[#4F46E5]" />
+              </div>
+              <h3 className="text-base font-semibold text-[#1F2937] mb-2">还没有配置项</h3>
+              <p className="text-sm text-[#6B7280] mb-1">配置项用于管理不同环境的参数，如数据库地址、API密钥等</p>
+              <p className="text-xs text-[#9CA3AF] mb-6">支持 DEV / TEST / PROD 三个环境隔离</p>
+
+              {/* 3-step guide */}
+              <div className="flex items-center justify-center gap-2 mb-6">
+                <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[#F8F9FB]">
+                  <div className="w-6 h-6 rounded-full bg-[#4F46E5] text-white text-xs flex items-center justify-center font-bold">1</div>
+                  <span className="text-xs text-[#6B7280]">新建配置</span>
+                </div>
+                <div className="w-4 h-0.5 bg-[#E5E7EB]" />
+                <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[#F8F9FB]">
+                  <div className="w-6 h-6 rounded-full bg-[#4F46E5] text-white text-xs flex items-center justify-center font-bold">2</div>
+                  <span className="text-xs text-[#6B7280]">SDK 拉取</span>
+                </div>
+                <div className="w-4 h-0.5 bg-[#E5E7EB]" />
+                <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[#F8F9FB]">
+                  <div className="w-6 h-6 rounded-full bg-[#4F46E5] text-white text-xs flex items-center justify-center font-bold">3</div>
+                  <span className="text-xs text-[#6B7280]">上线</span>
+                </div>
+              </div>
+
+              <Button variant="outline" size="sm" onClick={handleCreate}>
                 <Plus className="w-3 h-3" /> 创建第一个配置
               </Button>
             </div>
@@ -193,16 +238,18 @@ export function ConfigList() {
                     <th className="text-left py-3 px-2 text-xs font-medium text-[#6B7280]">Value</th>
                     <th className="text-left py-3 px-2 text-xs font-medium text-[#6B7280]">类型</th>
                     <th className="text-left py-3 px-2 text-xs font-medium text-[#6B7280]">环境</th>
-                    <th className="text-left py-3 px-2 text-xs font-medium text-[#6B7280]">描述</th>
                     <th className="text-left py-3 px-2 text-xs font-medium text-[#6B7280]">更新时间</th>
                     <th className="text-right py-3 px-2 text-xs font-medium text-[#6B7280]">操作</th>
                   </tr>
                 </thead>
                 <tbody>
                   {configs.map((config) => (
-                    <tr key={config.id} className="border-b border-[#F3F4F6] hover:bg-[#F8F9FB]">
+                    <tr key={config.id} className="border-b border-[#F3F4F6] hover:bg-[#F8F9FB] group">
                       <td className="py-3 px-2 font-mono text-sm font-medium text-[#1F2937]">{config.key}</td>
-                      <td className="py-3 px-2 font-mono text-sm text-[#6B7280] max-w-[200px] truncate">
+                      <td
+                        className="py-3 px-2 font-mono text-sm text-[#6B7280] max-w-[500px] truncate"
+                        title={config.value}
+                      >
                         {config.value}
                       </td>
                       <td className="py-3 px-2">
@@ -211,14 +258,29 @@ export function ConfigList() {
                       <td className="py-3 px-2">
                         <Badge variant={envColors[config.environment] || 'gray'}>{config.environment}</Badge>
                       </td>
-                      <td className="py-3 px-2 text-sm text-[#6B7280] max-w-[150px] truncate">
-                        {config.description || '-'}
-                      </td>
                       <td className="py-3 px-2 text-xs text-[#9CA3AF] whitespace-nowrap">
                         {timeAgo(config.updatedAt)}
                       </td>
                       <td className="py-3 px-2">
                         <div className="flex items-center justify-end gap-1">
+                          {/* Copy value — shown on row hover */}
+                          <button
+                            type="button"
+                            onClick={(e) => { e.stopPropagation(); copyToClipboard(config.value); }}
+                            className="p-1.5 rounded-lg text-[#6B7280] hover:bg-[#EEF2FF] hover:text-[#4F46E5] transition-colors opacity-0 group-hover:opacity-100"
+                            title="复制值"
+                          >
+                            <Copy className="w-3.5 h-3.5" />
+                          </button>
+                          {/* Copy key — shown on row hover */}
+                          <button
+                            type="button"
+                            onClick={(e) => { e.stopPropagation(); copyToClipboard(config.key); }}
+                            className="p-1.5 rounded-lg text-[#6B7280] hover:bg-[#EEF2FF] hover:text-[#4F46E5] transition-colors opacity-0 group-hover:opacity-100"
+                            title="复制 Key"
+                          >
+                            <Copy className="w-3.5 h-3.5" />
+                          </button>
                           <button
                             type="button"
                             onClick={(e) => { e.stopPropagation(); handleEdit(config); }}

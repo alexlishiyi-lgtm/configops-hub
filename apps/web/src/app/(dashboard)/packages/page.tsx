@@ -250,7 +250,10 @@ export default function PackagesPage() {
 
       {/* Detail Modal */}
       {detailPkg && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={() => setDetailPkg(null)}>
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
+          onClick={(e) => { if (e.target === e.currentTarget) setDetailPkg(null); }}
+        >
           <div
             className="w-full max-w-lg rounded-xl bg-white shadow-xl"
             onClick={(e) => e.stopPropagation()}
