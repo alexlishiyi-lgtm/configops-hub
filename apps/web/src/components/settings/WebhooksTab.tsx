@@ -158,7 +158,7 @@ export function WebhooksTab() {
                   ))}
                 </div>
               </div>
-              <Button onClick={handleCreate} disabled={creating || !url || selectedEvents.length === 0}>
+              <Button type="button" onClick={handleCreate} disabled={creating || !url || selectedEvents.length === 0}>
                 {creating && <Loader2 className="w-4 h-4 animate-spin" />}
                 创建 Webhook
               </Button>

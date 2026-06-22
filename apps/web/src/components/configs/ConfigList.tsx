@@ -111,7 +111,7 @@ export function ConfigList() {
           <h1 className="text-2xl font-bold text-[#1F2937]">配置中心</h1>
           <p className="text-sm text-[#6B7280] mt-1">管理所有环境配置项</p>
         </div>
-        <Button onClick={handleCreate}>
+        <Button onClick={(e) => { e.stopPropagation(); handleCreate(); }}>
           <Plus className="w-4 h-4" />
           新建配置
         </Button>
@@ -220,13 +220,15 @@ export function ConfigList() {
                       <td className="py-3 px-2">
                         <div className="flex items-center justify-end gap-1">
                           <button
-                            onClick={() => handleEdit(config)}
+                            type="button"
+                            onClick={(e) => { e.stopPropagation(); handleEdit(config); }}
                             className="p-1.5 rounded-lg text-[#6B7280] hover:bg-[#EEF2FF] hover:text-[#4F46E5] transition-colors"
                           >
                             <Pencil className="w-3.5 h-3.5" />
                           </button>
                           <button
-                            onClick={() => setDeleteId(config.id)}
+                            type="button"
+                            onClick={(e) => { e.stopPropagation(); setDeleteId(config.id); }}
                             className="p-1.5 rounded-lg text-[#6B7280] hover:bg-[#FEF2F2] hover:text-[#EF4444] transition-colors"
                           >
                             <Trash2 className="w-3.5 h-3.5" />

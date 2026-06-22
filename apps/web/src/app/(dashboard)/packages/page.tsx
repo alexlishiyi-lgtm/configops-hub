@@ -344,10 +344,12 @@ export default function PackagesPage() {
 
             {/* Actions */}
             <div className="flex justify-between px-6 py-4 border-t border-[#E5E7EB]">
-              <Button
-                variant="danger"
-                onClick={() => setDeleteId(detailPkg.id)}
-              >
+                  <Button
+                    type="button"
+                    variant="danger"
+                    size="sm"
+                    onClick={() => setDeleteId(detailPkg.id)}
+                  >
                 <Trash2 className="w-4 h-4" />
                 删除
               </Button>

@@ -36,13 +36,13 @@ const roleConfig: Record<string, { label: string; variant: 'default' | 'info' | 
 export default function SettingsPage() {
   const [tab, setTab] = useState<Tab>('members');
 
+  const searchParams = useSearchParams();
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const tabParam = params.get('tab');
+    const tabParam = searchParams.get('tab');
     if (tabParam && ['members', 'apikeys', 'billing', 'webhooks'].includes(tabParam)) {
       setTab(tabParam as Tab);
     }
-  }, []);
+  }, [searchParams]);
   const [members, setMembers] = useState<Member[]>([]);
   const [currentUserId, setCurrentUserId] = useState('');
   const [loading, setLoading] = useState(true);
