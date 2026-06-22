@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -34,6 +35,14 @@ const roleConfig: Record<string, { label: string; variant: 'default' | 'info' | 
 
 export default function SettingsPage() {
   const [tab, setTab] = useState<Tab>('members');
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const tabParam = params.get('tab');
+    if (tabParam && ['members', 'apikeys', 'billing', 'webhooks'].includes(tabParam)) {
+      setTab(tabParam as Tab);
+    }
+  }, []);
   const [members, setMembers] = useState<Member[]>([]);
   const [currentUserId, setCurrentUserId] = useState('');
   const [loading, setLoading] = useState(true);

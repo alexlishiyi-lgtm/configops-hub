@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { auth } from '@/lib/auth';
 import { getWorkspace } from '@/lib/workspace';
 
 const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY;
@@ -82,8 +83,9 @@ export async function POST(request: NextRequest) {
   let customerId = subscription?.stripeCustomerId;
 
   if (!customerId) {
+    const session = await auth();
     const customer = await stripe.customers.create({
-      email: ctx.member.userId, // We'll need to fetch email separately
+      email: session?.user?.email || undefined,
       metadata: {
         workspaceId: workspace.id,
         workspaceName: workspace.name,

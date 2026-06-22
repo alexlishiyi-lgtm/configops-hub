@@ -47,6 +47,11 @@ export default function PackagesPage() {
   const [detailPkg, setDetailPkg] = useState<Pkg | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [origin, setOrigin] = useState('http://localhost:3002');
+
+  useEffect(() => {
+    setOrigin(window.location.origin);
+  }, []);
 
   const fetchPackages = useCallback(async () => {
     setLoading(true);
@@ -140,7 +145,7 @@ export default function PackagesPage() {
           <Package className="w-5 h-5 text-[#3B82F6]" />
           <div className="flex-1">
             <p className="text-sm font-medium text-[#1F2937]">npm Registry 已启用</p>
-            <p className="text-xs text-[#6B7280] font-mono">{typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3002'}/api/npm</p>
+            <p className="text-xs text-[#6B7280] font-mono">{origin}/api/npm</p>
           </div>
           <Badge variant="info">运行中</Badge>
         </div>
@@ -148,11 +153,11 @@ export default function PackagesPage() {
           <p className="text-xs font-medium text-[#1F2937]">快速接入：</p>
           <div className="flex items-center gap-2 px-3 py-1.5 rounded-md bg-white border border-[#E5E7EB] font-mono text-xs text-[#6B7280]">
             <span className="text-[#9CA3AF]">$</span>
-            <span className="flex-1">npm config set registry {typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3002'}/api/npm</span>
+            <span className="flex-1">npm config set registry {origin}/api/npm</span>
           </div>
           <div className="flex items-center gap-2 px-3 py-1.5 rounded-md bg-white border border-[#E5E7EB] font-mono text-xs text-[#6B7280]">
             <span className="text-[#9CA3AF]">$</span>
-            <span className="flex-1">npm login --registry={typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3002'}/api/npm</span>
+            <span className="flex-1">npm login --registry={origin}/api/npm</span>
             <span className="text-[#9CA3AF] text-[10px]">用 API Key 作为密码</span>
           </div>
         </div>

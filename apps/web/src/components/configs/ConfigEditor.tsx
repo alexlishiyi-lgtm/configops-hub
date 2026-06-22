@@ -117,7 +117,11 @@ export function ConfigEditor({ open, onClose, onSaved, config, defaultEnv = 'DEV
       const data = await res.json();
 
       if (!res.ok) {
-        setError(data.error || '操作失败');
+        if (res.status === 402) {
+          setError(data.error || '已达到计划上限，请升级订阅');
+        } else {
+          setError(data.error || '操作失败');
+        }
         return;
       }
 
@@ -143,7 +147,11 @@ export function ConfigEditor({ open, onClose, onSaved, config, defaultEnv = 'DEV
       const data = await res.json();
 
       if (!res.ok) {
-        setError(data.error || '回滚失败');
+        if (res.status === 402) {
+          setError(data.error || '当前计划不支持回滚，请升级到专业版');
+        } else {
+          setError(data.error || '回滚失败');
+        }
         return;
       }
 

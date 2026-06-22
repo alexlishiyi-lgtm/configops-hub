@@ -402,9 +402,9 @@ export function BillingTab() {
             })}
           </div>
           <p className="mt-4 text-xs text-[#9CA3AF] text-center">
-            {process.env.NEXT_PUBLIC_STRIPE_ENABLED
-              ? '支付由 Stripe 安全处理，支持支付宝、微信支付'
-              : '开发模式：无需真实支付，点击升级即可切换计划'}
+            {data.plan === 'FREE'
+              ? '开发模式：无需真实支付，点击升级即可切换计划'
+              : '支付由 Stripe 安全处理，支持支付宝、微信支付'}
           </p>
         </CardContent>
       </Card>

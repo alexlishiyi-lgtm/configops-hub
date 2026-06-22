@@ -36,6 +36,7 @@ export function WebhooksTab() {
   const [selectedEvents, setSelectedEvents] = useState<string[]>(['config.updated']);
   const [creating, setCreating] = useState(false);
   const [deleting, setDeleting] = useState<string | null>(null);
+  const [planError, setPlanError] = useState<string | null>(null);
 
   const fetchWebhooks = useCallback(async () => {
     setLoading(true);
@@ -57,6 +58,7 @@ export function WebhooksTab() {
 
   const handleCreate = async () => {
     setCreating(true);
+    setPlanError(null);
     try {
       const res = await fetch('/api/webhooks', {
         method: 'POST',
@@ -68,6 +70,9 @@ export function WebhooksTab() {
         setSelectedEvents(['config.updated']);
         setShowCreate(false);
         fetchWebhooks();
+      } else if (res.status === 402) {
+        const data = await res.json();
+        setPlanError(data.error || '当前计划不支持 Webhook，请升级到专业版');
       }
     } finally {
       setCreating(false);
@@ -116,6 +121,14 @@ export function WebhooksTab() {
           </CardTitle>
         </CardHeader>
         <CardContent>
+          {planError && (
+            <div className="mb-4 px-4 py-3 rounded-lg bg-[#FFFBEB] border border-[#FDE68A] text-sm text-[#92400E] flex items-center justify-between">
+              <span>{planError}</span>
+              <a href="/settings?tab=billing" className="text-xs font-medium text-[#4F46E5] hover:underline whitespace-nowrap">
+                升级 →
+              </a>
+            </div>
+          )}
           {showCreate && (
             <div className="space-y-4 mb-4 pb-4 border-b border-[#E5E7EB]">
               <div>
