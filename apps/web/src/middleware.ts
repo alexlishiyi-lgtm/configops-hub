@@ -1,29 +1,11 @@
-import { auth } from '@/lib/auth';
-import { NextResponse } from 'next/server';
+import NextAuth from 'next-auth';
+import { edgeAuthConfig } from '@/lib/auth/edge-config';
 
-const publicRoutes = ['/', '/login', '/register'];
-const authRoutes = ['/login', '/register'];
-
-export default auth((req) => {
-  const { nextUrl } = req;
-  const isLoggedIn = !!req.auth;
-  const isPublicRoute = publicRoutes.some(
-    (route) => nextUrl.pathname === route || nextUrl.pathname.startsWith('/api/auth')
-  );
-  const isAuthRoute = authRoutes.includes(nextUrl.pathname);
-
-  // 已登录用户访问登录/注册页 → 跳转到 dashboard
-  if (isAuthRoute && isLoggedIn) {
-    return NextResponse.redirect(new URL('/dashboard', nextUrl));
-  }
-
-  // 未登录用户访问受保护路由 → 跳转到登录页
-  if (!isPublicRoute && !isLoggedIn) {
-    return NextResponse.redirect(new URL('/login', nextUrl));
-  }
-
-  return NextResponse.next();
-});
+/**
+ * Middleware 使用 Edge-safe 配置（不含 Prisma / bcrypt）
+ * 只做路由保护，不做数据库查询
+ */
+export default NextAuth(edgeAuthConfig).auth;
 
 export const config = {
   matcher: ['/((?!_next/static|_next/image|favicon.ico|api/auth).*)'],

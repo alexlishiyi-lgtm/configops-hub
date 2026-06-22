@@ -3,20 +3,23 @@ import { PrismaAdapter } from '@auth/prisma-adapter';
 import GitHub from 'next-auth/providers/github';
 import Credentials from 'next-auth/providers/credentials';
 import bcrypt from 'bcryptjs';
-import { db } from '@/lib/db';
 import { z } from 'zod';
+import { db } from '@/lib/db';
+import { edgeAuthConfig } from './edge-config';
 
 const credentialsSchema = z.object({
   email: z.string().email(),
   password: z.string().min(1),
 });
 
+/**
+ * 完整 auth 配置 — 包含 Prisma adapter + providers
+ * 用于 API routes 和 server components (Node.js Runtime)
+ */
 export const authConfig = {
+  ...edgeAuthConfig,
   adapter: PrismaAdapter(db),
   session: { strategy: 'jwt' },
-  pages: {
-    signIn: '/login',
-  },
   providers: [
     GitHub({
       clientId: process.env.GITHUB_ID,
@@ -52,6 +55,7 @@ export const authConfig = {
     }),
   ],
   callbacks: {
+    ...edgeAuthConfig.callbacks,
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
