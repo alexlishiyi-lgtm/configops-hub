@@ -8,5 +8,5 @@ import { edgeAuthConfig } from '@/lib/auth/edge-config';
 export default NextAuth(edgeAuthConfig).auth;
 
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico|api/auth).*)'],
+  matcher: ['/((?!_next/static|_next/image|favicon.ico|api).*)'],
 };

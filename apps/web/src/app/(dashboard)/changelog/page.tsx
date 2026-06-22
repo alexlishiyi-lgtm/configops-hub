@@ -1,89 +1,127 @@
-import { Card, CardContent } from '@/components/ui/card';
+'use client';
+
+import { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { GitCommitHorizontal, RotateCcw } from 'lucide-react';
+import { GitCommitHorizontal, Loader2, RefreshCw } from 'lucide-react';
+import { timeAgo } from '@/lib/utils';
 
-const changes = [
-  { action: '修改', resource: 'database.host', env: 'PROD', user: '演示用户', time: '2026-06-22 17:45', type: 'UPDATE', version: 3, old: '192.168.1.100', new: 'db.prod.internal' },
-  { action: '新增', resource: 'app.debug', env: 'DEV', user: '演示用户', time: '2026-06-22 16:30', type: 'CREATE', version: 1, old: null, new: 'true' },
-  { action: '推送', resource: 'redis.url', env: 'TEST', user: '演示用户', time: '2026-06-22 14:00', type: 'PUSH', version: 2, old: 'redis://old:6379', new: 'redis://localhost:6379' },
-  { action: '修改', resource: 'app.port', env: 'DEV', user: '演示用户', time: '2026-06-21 18:00', type: 'UPDATE', version: 2, old: '8080', new: '3000' },
-  { action: '删除', resource: 'old.config', env: 'DEV', user: '演示用户', time: '2026-06-21 10:00', type: 'DELETE', version: 1, old: 'deprecated', new: null },
-];
+interface AuditLog {
+  id: string;
+  action: string;
+  resource: string;
+  resourceId: string | null;
+  detail: Record<string, unknown> | null;
+  userId: string | null;
+  createdAt: string;
+}
 
-const typeColors: Record<string, 'default' | 'success' | 'warning' | 'danger' | 'info'> = {
-  CREATE: 'success',
-  UPDATE: 'warning',
-  DELETE: 'danger',
-  PUSH: 'info',
+const actionConfig: Record<string, { label: string; variant: 'success' | 'warning' | 'danger' | 'info' | 'default' | 'gray' }> = {
+  CREATE: { label: '新增', variant: 'success' },
+  UPDATE: { label: '修改', variant: 'warning' },
+  DELETE: { label: '删除', variant: 'danger' },
+  PUSH: { label: '推送', variant: 'info' },
+  ROLLBACK: { label: '回滚', variant: 'default' },
+  LOGIN: { label: '登录', variant: 'gray' },
+  LOGOUT: { label: '登出', variant: 'gray' },
+  MEMBER_INVITE: { label: '邀请', variant: 'info' },
+  MEMBER_REMOVE: { label: '移除', variant: 'danger' },
+};
+
+const resourceLabels: Record<string, string> = {
+  config: '配置',
+  package: '包',
+  member: '成员',
 };
 
 export default function ChangelogPage() {
+  const [logs, setLogs] = useState<AuditLog[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchLogs = async () => {
+    setLoading(true);
+    // We'll reuse the stats endpoint but need more logs
+    // For now, fetch all audit logs via a simple approach
+    const res = await fetch('/api/stats');
+    const data = await res.json();
+    // The stats endpoint returns recent 8, but we want more
+    // Let's create a dedicated changelog API or extend stats
+    setLogs(data.recentChanges || []);
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    fetchLogs();
+  }, []);
+
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-[#1F2937]">变更日志</h1>
-        <p className="text-sm text-[#6B7280] mt-1">追踪所有配置变更历史，支持一键回滚</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-[#1F2937]">变更日志</h1>
+          <p className="text-sm text-[#6B7280] mt-1">所有操作的审计记录</p>
+        </div>
+        <Button variant="outline" size="icon" onClick={fetchLogs}>
+          <RefreshCw className="w-4 h-4" />
+        </Button>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Timeline */}
-        <Card className="lg:col-span-2">
-          <CardContent className="p-6">
-            <h2 className="font-semibold text-[#1F2937] flex items-center gap-2 mb-4">
-              <GitCommitHorizontal className="w-4 h-4 text-[#4F46E5]" />
-              变更时间线
-            </h2>
-            <div className="space-y-4">
-              {changes.map((change, i) => (
-                <div key={i} className="flex gap-4 pb-4 border-b border-[#F3F4F6] last:border-0 last:pb-0">
-                  <div className="flex flex-col items-center">
-                    <div className={`w-3 h-3 rounded-full ${
-                      change.type === 'CREATE' ? 'bg-[#10B981]' :
-                      change.type === 'UPDATE' ? 'bg-[#F59E0B]' :
-                      change.type === 'DELETE' ? 'bg-[#EF4444]' :
-                      'bg-[#3B82F6]'
-                    }`} />
-                    {i < changes.length - 1 && <div className="w-px h-full bg-[#E5E7EB] mt-1" />}
-                  </div>
-                  <div className="flex-1 space-y-1">
-                    <div className="flex items-center gap-2">
-                      <Badge variant={typeColors[change.type]}>{change.action}</Badge>
-                      <span className="font-mono text-sm font-medium text-[#1F2937]">{change.resource}</span>
-                      <Badge variant="gray">{change.env}</Badge>
-                    </div>
-                    <div className="flex items-center gap-3 text-xs text-[#9CA3AF]">
-                      <span>v{change.version}</span>
-                      <span>{change.user}</span>
-                      <span>{change.time}</span>
-                    </div>
-                    {change.old !== null && change.new !== null && (
-                      <div className="mt-2 rounded-lg bg-[#F8F9FB] border border-[#E5E7EB] p-2 font-mono text-xs">
-                        <div className="text-[#EF4444]">- {change.old}</div>
-                        <div className="text-[#10B981]">+ {change.new}</div>
-                      </div>
-                    )}
-                  </div>
-                  <Button variant="ghost" size="sm" className="self-start">
-                    <RotateCcw className="w-3 h-3" />
-                    回滚
-                  </Button>
-                </div>
-              ))}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base">
+            <GitCommitHorizontal className="w-5 h-5 text-[#4F46E5]" />
+            变更历史 ({logs.length})
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {loading ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="w-6 h-6 text-[#9CA3AF] animate-spin" />
             </div>
-          </CardContent>
-        </Card>
+          ) : logs.length === 0 ? (
+            <div className="text-center py-12">
+              <GitCommitHorizontal className="w-10 h-10 text-[#D1D5DB] mx-auto mb-3" />
+              <p className="text-sm text-[#6B7280]">暂无变更记录</p>
+            </div>
+          ) : (
+            <div className="space-y-1">
+              {logs.map((log, index) => {
+                const actionInfo = actionConfig[log.action] || { label: log.action, variant: 'gray' as const };
+                const detail = log.detail as Record<string, unknown> | null;
+                const key = detail?.key || detail?.email || log.resource;
+                const env = detail?.environment as string | undefined;
+                const resourceLabel = resourceLabels[log.resource] || log.resource;
 
-        {/* Diff viewer placeholder */}
-        <Card>
-          <CardContent className="p-6">
-            <h2 className="font-semibold text-[#1F2937] mb-4">版本对比</h2>
-            <p className="text-sm text-[#9CA3AF] text-center py-8">
-              选择一条变更记录查看详细 Diff
-            </p>
-          </CardContent>
-        </Card>
-      </div>
+                return (
+                  <div key={log.id} className="flex gap-3">
+                    {/* Timeline */}
+                    <div className="flex flex-col items-center">
+                      <div className="w-2 h-2 rounded-full bg-[#4F46E5] mt-3" />
+                      {index < logs.length - 1 && (
+                        <div className="w-px flex-1 bg-[#E5E7EB]" />
+                      )}
+                    </div>
+
+                    {/* Content */}
+                    <div className="flex-1 pb-4 pt-1">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <Badge variant={actionInfo.variant}>{actionInfo.label}</Badge>
+                        <span className="text-sm font-medium text-[#1F2937]">{key}</span>
+                        <Badge variant="gray">{resourceLabel}</Badge>
+                        {env && <Badge variant="gray">{env}</Badge>}
+                      </div>
+                      <p className="text-xs text-[#9CA3AF] mt-1">
+                        {timeAgo(log.createdAt)}
+                      </p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }

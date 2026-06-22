@@ -1,3 +1,6 @@
+'use client';
+
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -9,21 +12,39 @@ import {
   Users,
   ArrowRight,
   Activity,
+  Loader2,
 } from 'lucide-react';
+import { timeAgo } from '@/lib/utils';
 
-const stats = [
-  { label: '配置项', value: '6', icon: Settings2, color: 'text-[#4F46E5]', bg: 'bg-[#EEF2FF]' },
-  { label: '今日变更', value: '3', icon: GitCommitHorizontal, color: 'text-[#10B981]', bg: 'bg-[#ECFDF5]' },
-  { label: '包数量', value: '3', icon: Package, color: 'text-[#F59E0B]', bg: 'bg-[#FFFBEB]' },
-  { label: '团队成员', value: '1', icon: Users, color: 'text-[#3B82F6]', bg: 'bg-[#EFF6FF]' },
-];
+interface StatsData {
+  stats: {
+    configCount: number;
+    todayChanges: number;
+    packageCount: number;
+    memberCount: number;
+  };
+  recentChanges: Array<{
+    id: string;
+    action: string;
+    resource: string;
+    key: string;
+    environment: string | null;
+    user: string;
+    createdAt: string;
+  }>;
+}
 
-const recentChanges = [
-  { action: '修改', resource: 'database.host', env: 'PROD', user: '演示用户', time: '2 分钟前', type: 'UPDATE' },
-  { action: '新增', resource: 'app.debug', env: 'DEV', user: '演示用户', time: '1 小时前', type: 'CREATE' },
-  { action: '推送', resource: 'redis.url', env: 'TEST', user: '演示用户', time: '3 小时前', type: 'PUSH' },
-  { action: '修改', resource: 'app.port', env: 'DEV', user: '演示用户', time: '昨天', type: 'UPDATE' },
-];
+const actionLabels: Record<string, { label: string; variant: 'success' | 'warning' | 'info' | 'danger' | 'gray' | 'default' }> = {
+  CREATE: { label: '新增', variant: 'success' },
+  UPDATE: { label: '修改', variant: 'warning' },
+  DELETE: { label: '删除', variant: 'danger' },
+  PUSH: { label: '推送', variant: 'info' },
+  ROLLBACK: { label: '回滚', variant: 'default' },
+  MEMBER_INVITE: { label: '邀请', variant: 'gray' },
+  MEMBER_REMOVE: { label: '移除', variant: 'gray' },
+  LOGIN: { label: '登录', variant: 'gray' },
+  LOGOUT: { label: '登出', variant: 'gray' },
+};
 
 const quickActions = [
   { href: '/configs', label: '新建配置', icon: Settings2, desc: '添加新的配置项' },
@@ -33,11 +54,36 @@ const quickActions = [
 ];
 
 export default function DashboardPage() {
+  const [data, setData] = useState<StatsData | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch('/api/stats')
+      .then((res) => res.json())
+      .then((data) => setData(data))
+      .finally(() => setLoading(false));
+  }, []);
+
+  if (loading || !data) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <Loader2 className="w-6 h-6 text-[#9CA3AF] animate-spin" />
+      </div>
+    );
+  }
+
+  const stats = [
+    { label: '配置项', value: data.stats.configCount, icon: Settings2, color: 'text-[#4F46E5]', bg: 'bg-[#EEF2FF]' },
+    { label: '今日变更', value: data.stats.todayChanges, icon: GitCommitHorizontal, color: 'text-[#10B981]', bg: 'bg-[#ECFDF5]' },
+    { label: '包数量', value: data.stats.packageCount, icon: Package, color: 'text-[#F59E0B]', bg: 'bg-[#FFFBEB]' },
+    { label: '团队成员', value: data.stats.memberCount, icon: Users, color: 'text-[#3B82F6]', bg: 'bg-[#EFF6FF]' },
+  ];
+
   return (
     <div className="space-y-6">
       {/* Welcome */}
       <div className="bg-gradient-to-r from-[#4F46E5] to-[#6366F1] rounded-xl p-6 text-white">
-        <h1 className="text-2xl font-bold mb-1">欢迎回来 👋</h1>
+        <h1 className="text-2xl font-bold mb-1">欢迎回来</h1>
         <p className="text-white/80">这是你的配置管理中心概览</p>
       </div>
 
@@ -75,27 +121,29 @@ export default function DashboardPage() {
               </Link>
             </div>
             <div className="space-y-3">
-              {recentChanges.map((change, i) => (
-                <div
-                  key={i}
-                  className="flex items-center gap-3 py-2 border-b border-[#F3F4F6] last:border-0"
-                >
-                  <Badge
-                    variant={
-                      change.type === 'CREATE' ? 'success' :
-                      change.type === 'UPDATE' ? 'warning' :
-                      change.type === 'PUSH' ? 'info' : 'gray'
-                    }
-                  >
-                    {change.action}
-                  </Badge>
-                  <span className="font-medium text-sm text-[#1F2937] flex-1">
-                    {change.resource}
-                  </span>
-                  <Badge variant="gray">{change.env}</Badge>
-                  <span className="text-xs text-[#9CA3AF] w-20 text-right">{change.time}</span>
-                </div>
-              ))}
+              {data.recentChanges.length === 0 ? (
+                <p className="text-sm text-[#9CA3AF] text-center py-8">暂无变更记录</p>
+              ) : (
+                data.recentChanges.map((change) => {
+                  const actionInfo = actionLabels[change.action] || { label: change.action, variant: 'gray' as const };
+                  return (
+                    <div
+                      key={change.id}
+                      className="flex items-center gap-3 py-2 border-b border-[#F3F4F6] last:border-0"
+                    >
+                      <Badge variant={actionInfo.variant}>{actionInfo.label}</Badge>
+                      <span className="font-medium text-sm text-[#1F2937] flex-1 truncate">
+                        {change.key}
+                      </span>
+                      {change.environment && <Badge variant="gray">{change.environment}</Badge>}
+                      <span className="text-xs text-[#9CA3AF] w-24 text-right truncate">{change.user}</span>
+                      <span className="text-xs text-[#9CA3AF] w-20 text-right whitespace-nowrap">
+                        {timeAgo(change.createdAt)}
+                      </span>
+                    </div>
+                  );
+                })
+              )}
             </div>
           </CardContent>
         </Card>

@@ -14,7 +14,12 @@ const routeNames: Record<string, string> = {
   '/settings': '设置',
 };
 
-export function Topbar({ user }: { user: { name?: string | null; email?: string | null; image?: string | null } }) {
+interface TopbarProps {
+  user: { name?: string | null; email?: string | null; image?: string | null };
+  workspaceName: string;
+}
+
+export function Topbar({ user, workspaceName }: TopbarProps) {
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -39,7 +44,7 @@ export function Topbar({ user }: { user: { name?: string | null; email?: string 
     <header className="h-14 bg-white border-b border-[#E5E7EB] flex items-center justify-between px-6 fixed top-0 left-[220px] right-0 z-20">
       {/* Breadcrumb */}
       <div className="flex items-center gap-2 text-sm">
-        <span className="text-[#9CA3AF]">ConfigOps Hub</span>
+        <span className="text-[#9CA3AF]">{workspaceName}</span>
         <span className="text-[#D1D5DB]">/</span>
         <span className="font-medium text-[#1F2937]">{breadcrumb}</span>
       </div>
