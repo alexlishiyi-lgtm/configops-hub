@@ -3,7 +3,6 @@ import { z } from 'zod';
 import { db } from '@/lib/db';
 import { auth } from '@/lib/auth';
 import { getWorkspace } from '@/lib/workspace';
-import { createAuditLog } from '@/lib/audit';
 
 const createConfigSchema = z.object({
   key: z.string().min(1).max(255).regex(/^[a-zA-Z0-9_.\-/]+$/, 'Key 只能包含字母、数字、点、下划线、短横线'),

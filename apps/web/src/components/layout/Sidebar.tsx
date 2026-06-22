@@ -84,7 +84,7 @@ export function Sidebar({ workspace, role }: SidebarProps) {
       {/* Footer — Plan info */}
       <div className="p-4 border-t border-[#E5E7EB]">
         <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[#F8F9FB]">
-          <div className={cn('w-8 h-8 rounded-lg flex items-center justify-center', planColors[workspace.plan] || planLabels.FREE)}>
+          <div className={cn('w-8 h-8 rounded-lg flex items-center justify-center', planColors[workspace.plan] || planColors.FREE)}>
             <Boxes className="w-4 h-4" />
           </div>
           <div className="flex-1 min-w-0">

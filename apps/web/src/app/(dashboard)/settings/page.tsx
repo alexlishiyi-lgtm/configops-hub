@@ -42,11 +42,20 @@ export default function SettingsPage() {
 
   const fetchMembers = useCallback(async () => {
     setLoading(true);
-    const res = await fetch('/api/members');
-    const data = await res.json();
-    setMembers(data.members || []);
-    setCurrentUserId(data.currentUserId || '');
-    setLoading(false);
+    try {
+      const res = await fetch('/api/members');
+      if (!res.ok) {
+        setMembers([]);
+        return;
+      }
+      const data = await res.json();
+      setMembers(data.members || []);
+      setCurrentUserId(data.currentUserId || '');
+    } catch {
+      setMembers([]);
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
   useEffect(() => {
@@ -77,12 +86,14 @@ export default function SettingsPage() {
   const handleRoleChange = async (memberId: string, role: 'ADMIN' | 'DEVELOPER' | 'VIEWER') => {
     setUpdatingRole(memberId);
     try {
-      await fetch('/api/members', {
+      const res = await fetch('/api/members', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ memberId, role }),
       });
-      fetchMembers();
+      if (res.ok) {
+        fetchMembers();
+      }
     } finally {
       setUpdatingRole(null);
     }

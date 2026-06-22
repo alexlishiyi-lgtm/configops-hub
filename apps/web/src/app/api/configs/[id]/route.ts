@@ -3,7 +3,6 @@ import { z } from 'zod';
 import { db } from '@/lib/db';
 import { auth } from '@/lib/auth';
 import { getWorkspace } from '@/lib/workspace';
-import { createAuditLog } from '@/lib/audit';
 
 const updateConfigSchema = z.object({
   value: z.string().min(0).optional(),
@@ -202,23 +201,8 @@ export async function DELETE(
   }
 
   await db.$transaction(async (tx) => {
-    // Create a final snapshot marking deletion
-    const lastSnapshot = await tx.configSnapshot.findFirst({
-      where: { configId: config.id },
-      orderBy: { version: 'desc' },
-    });
-    const nextVersion = (lastSnapshot?.version ?? 0) + 1;
-
-    await tx.configSnapshot.create({
-      data: {
-        configId: config.id,
-        version: nextVersion,
-        value: config.value,
-        changedBy: session.user.id,
-        changeType: 'DELETED',
-      },
-    });
-
+    // Record the deletion in the audit log (snapshots are cascade-deleted with the config,
+    // but the audit log entry on the workspace survives and retains the key/environment info)
     await tx.auditLog.create({
       data: {
         workspaceId: ctx.workspace.id,
@@ -226,7 +210,7 @@ export async function DELETE(
         action: 'DELETE',
         resource: 'config',
         resourceId: config.id,
-        detail: { key: config.key, environment: config.environment },
+        detail: { key: config.key, environment: config.environment, lastValue: config.value },
       },
     });
 

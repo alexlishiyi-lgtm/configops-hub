@@ -47,14 +47,23 @@ export function ConfigList() {
 
   const fetchConfigs = useCallback(async () => {
     setLoading(true);
-    const params = new URLSearchParams();
-    if (env !== 'ALL') params.set('env', env);
-    if (search) params.set('search', search);
+    try {
+      const params = new URLSearchParams();
+      if (env !== 'ALL') params.set('env', env);
+      if (search) params.set('search', search);
 
-    const res = await fetch(`/api/configs?${params}`);
-    const data = await res.json();
-    setConfigs(data.configs || []);
-    setLoading(false);
+      const res = await fetch(`/api/configs?${params}`);
+      if (!res.ok) {
+        setConfigs([]);
+        return;
+      }
+      const data = await res.json();
+      setConfigs(data.configs || []);
+    } catch {
+      setConfigs([]);
+    } finally {
+      setLoading(false);
+    }
   }, [env, search]);
 
   useEffect(() => {
@@ -228,6 +237,7 @@ export function ConfigList() {
 
       {/* Editor Modal */}
       <ConfigEditor
+        key={editConfig?.id || 'new'}
         open={editorOpen}
         onClose={() => setEditorOpen(false)}
         onSaved={fetchConfigs}

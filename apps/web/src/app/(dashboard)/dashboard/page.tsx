@@ -59,8 +59,18 @@ export default function DashboardPage() {
 
   useEffect(() => {
     fetch('/api/stats')
-      .then((res) => res.json())
+      .then((res) => {
+        if (!res.ok) throw new Error('Failed to load');
+        return res.json();
+      })
       .then((data) => setData(data))
+      .catch(() => {
+        // Set empty data on error
+        setData({
+          stats: { configCount: 0, todayChanges: 0, packageCount: 0, memberCount: 0 },
+          recentChanges: [],
+        });
+      })
       .finally(() => setLoading(false));
   }, []);
 

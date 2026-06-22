@@ -2,6 +2,7 @@
 
 import { usePathname } from 'next/navigation';
 import { signOut } from 'next-auth/react';
+import Link from 'next/link';
 import { useState, useRef, useEffect } from 'react';
 import { ChevronDown, LogOut, User, Settings } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -70,13 +71,13 @@ export function Topbar({ user, workspaceName }: TopbarProps) {
               <p className="text-sm font-medium text-[#1F2937] truncate">{user.name}</p>
               <p className="text-xs text-[#9CA3AF] truncate">{user.email}</p>
             </div>
-            <a
+            <Link
               href="/settings"
               className="flex items-center gap-2 px-3 py-2 text-sm text-[#6B7280] hover:bg-[#F8F9FB] hover:text-[#1F2937]"
             >
               <Settings className="w-4 h-4" />
               设置
-            </a>
+            </Link>
             <button
               onClick={() => signOut({ callbackUrl: '/' })}
               className="w-full flex items-center gap-2 px-3 py-2 text-sm text-[#EF4444] hover:bg-[#FEF2F2]"

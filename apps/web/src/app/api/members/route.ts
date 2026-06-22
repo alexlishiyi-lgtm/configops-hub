@@ -3,7 +3,6 @@ import { z } from 'zod';
 import { db } from '@/lib/db';
 import { auth } from '@/lib/auth';
 import { getWorkspace } from '@/lib/workspace';
-import { createAuditLog } from '@/lib/audit';
 
 const inviteSchema = z.object({
   email: z.string().email(),
